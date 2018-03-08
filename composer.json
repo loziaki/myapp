@@ -1,0 +1,16 @@
+{
+  "name": "yaokun.hu/9fbank_report",
+  "require": {
+    "lcobucci/jwt": "*",
+    "symfony/http-foundation": "^3.3"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^2.8"
+  },
+  "repositories": {
+    "packagist": {
+      "type": "composer",
+      "url": "https://packagist.phpcomposer.com"
+    }
+  }
+}
