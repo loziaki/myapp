@@ -1,0 +1,9 @@
+temp/*
+.vscode
+config/config.php
+public
+vendor
+.idea
+composer.lock
+.php_cs.cache
+test.php
