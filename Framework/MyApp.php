@@ -94,7 +94,11 @@ class MyApp
     //在调用接口前的准备
     private function prepare(): bool
     {
+        if (!file_exists(self::ROUTES_PATH)) {
+            return false;
+        }
         $routesMap = require self::ROUTES_PATH;
+
         $path = self::$request->query->get('_path');
         $method = self::$request->getMethod();
 
