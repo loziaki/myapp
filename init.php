@@ -8,10 +8,12 @@ define('ROOT_PATH', dirname(__FILE__));
 require ROOT_PATH.'/config/config.php';
 
 //引用MyAutoLoader
-require ROOT_PATH.'/include/Framework/MyAutoloader.php';
-Base\MyAutoloader::register();
+require ROOT_PATH.'/framework/MyAutoloader.php';
+Framework\MyAutoloader::register();
 
 //引用Composer的autoloader
 if (is_dir(ROOT_PATH.'/vendor')) {
     require ROOT_PATH.'/vendor/autoload.php';
+} else {
+    exit('plz run "composer installed" in command line');
 }

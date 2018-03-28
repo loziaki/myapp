@@ -1,26 +1,30 @@
 <?php
-namespace Base;
+namespace Framework;
 
 class MyAutoloader {
     public static $mappings = array();
 
-    const MAPPING_PATH = ROOT_PATH.'/include/Framework/mapping.php';
+    const DIY_MAPPING_PATH = ROOT_PATH.'/include/mapping.php';
+    const APP_MAPPING_PATH = ROOT_PATH.'/framework/baseMapping.php';
 
     public static function register() {
         if (function_exists('__autoload')) {
             spl_autoload_register('__autoload');
         }
 
-        if (file_exists(self::MAPPING_PATH)) {
-            self::$mappings = require(self::MAPPING_PATH);
+        $baseMapping = require(self::APP_MAPPING_PATH);
+
+        if (file_exists(self::DIY_MAPPING_PATH)) {
+            $diyMappping = require(self::DIY_MAPPING_PATH);
+            self::$mappings = array_merge($baseMappping,$diyMappping);
         } else {
-            self::$mappings = [];
+            self::$mappings = $baseMappping;
         }
 
         if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-            return spl_autoload_register(array('Base\MyAutoloader', 'load'), true, true);
+            return spl_autoload_register(array('Framework\MyAutoloader', 'load'), true, true);
         } else {
-            return spl_autoload_register(array('Base\MyAutoloader', 'load'));
+            return spl_autoload_register(array('Framework\MyAutoloader', 'load'));
         }
     }
 
