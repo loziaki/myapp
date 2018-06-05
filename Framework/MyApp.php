@@ -182,7 +182,7 @@ class MyApp
                 $res = '"'.self::$res.'"';
             }
         } else {
-            $res = 'null';
+            $res = '"'.(string)self::$res.'"';;
         }
 
         return sprintf('{"status":%d,"msg":%s,"res":%s}', 

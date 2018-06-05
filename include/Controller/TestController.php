@@ -5,6 +5,6 @@ class TestController
 {
     public function testAction()
     {
-        
+        return 1;
     }
 }
