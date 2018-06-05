@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS `ccv2_db` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE IF NOT EXISTS `test_db` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE `ccv2_db`;
+USE `test_db`;
 
 CREATE TABLE IF NOT EXISTS `global_var` (
   `name` varchar(20) COLLATE utf8mb4_unicode_ci NULL,
