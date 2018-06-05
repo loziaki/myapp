@@ -4,8 +4,8 @@ namespace Framework;
 class MyAutoloader {
     public static $mappings = array();
 
-    const DIY_MAPPING_PATH = ROOT_PATH.'/include/mapping.php';
-    const APP_MAPPING_PATH = ROOT_PATH.'/framework/baseMapping.php';
+    const DIY_MAPPING_PATH = ROOT_PATH.'include/mapping.php';
+    const APP_MAPPING_PATH = ROOT_PATH.'framework/baseMapping.php';
 
     public static function register() {
         if (function_exists('__autoload')) {
@@ -37,7 +37,7 @@ class MyAutoloader {
             }
 
             //can not find in the mappings variable ,then load the file by namespace
-            $dir  = ROOT_PATH.'/include/';
+            $dir  = ROOT_PATH.'include/';
             $str  = str_replace('\\', DIRECTORY_SEPARATOR, $class);
             $file = $dir.$str.'.php';
             if (file_exists($file) && !class_exists($class, false)) {

@@ -1,57 +1,68 @@
 <?php
 namespace Middleware;
 
-use \Framework\MiddlewareInterface;
 use \Service\JwtMaker;
+use \Controller\LoginController;
+use \Framework\MiddlewareInterface;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\ValidationData;
-use \PDO;
+use Model\User;
 use Framework\MyApp;
-use Lcobucci\JWT\Signer\Hmac\Sha256;
 
 class TokenCheck implements MiddlewareInterface
 {
-    const JWT_HEADER = 'mytoken';
+    private $token;
+    private $uid;
 
     public function handle(): bool
     {
-        $tokenStr = MyApp::$request->headers->get(self::JWT_HEADER);
-        if (empty($tokenStr)) {
-            MyApp::setResponse(100,'invalid token');
-            return false;
+        $tokenStr= MyApp::$request->cookies->get(LoginController::COOKIE_TOKEN,null);
+        //是否登录:cookie检查
+        if(empty($tokenStr)){
+            MyApp::setResponse(2000,'用户未登录，请先登录');
+            return FALSE;
         }
-        $token = (new Parser())->parse((string) $tokenStr);
-        //从header获得对应的uid
-        $uid = $token->getHeader('jti');
-        MyApp::$preset->set('uid',$uid);
-        //判断签名是否签名正确的
-        $signer = new Sha256();
-        if (false == $token->verify($signer,JwtMaker::$key)) {
-            MyApp::setResponse(101,'invalid token');
-            return false;
-        }
-        //如果有，那么就判断当前时戳是不是过期了
-        //如果过期了就false
-        // if (true == $token->isExpired()) {
-        //     MyApp::setResponse(103,'invalid token');
-        //     return false;
-        // }
+        $this->token = (new Parser())->parse((string)$tokenStr);
+        $this->uid = $this->token->getHeader('jti');
 
-        if (false == $this->checkValidating($token,$uid)) {
-            MyApp::setResponse(102,'invalid token');
-            return false;
+        try{
+            //密钥验证
+            if (FALSE == $this->isverify()) {
+                MyApp::setResponse(3001,'登录信息过期，请先登录');
+                return FALSE;
+            }
+
+            //token验证
+            if (FALSE == $this->isvalidate()) {
+                MyApp::setResponse(3002,'登录信息过期，请先登录');
+                return FALSE;
+            }
+
+            MyApp::$preset->set('uid',$this->uid);
+            return TRUE;
+        }catch (\Exception $e){
+            MyApp::setResponse(5000,$e->getMessage());
+            return FALSE;
         }
-        
-        return true;
     }
 
-    private function checkValidating($token,$id): bool
+    private function isverify():bool
     {
-        $data = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
-        $data->setIssuer(JwtMaker::$issuer);
-        $data->setAudience(JwtMaker::$audience);
-        $data->setId($id);
-        
-        return $token->validate($data);
+        $signer = new Sha256();
+        $created = $this->token->getClaim('iat');
+        $result = (new User(['uid' => $this->uid]))->getLoginInfobyUid();
+        list($randNum,$remoteArr) = array_values($result);
+        $sign = JwtMaker::makeSign($this->uid,$created,$randNum);
+        return $this->token->verify($signer,$sign);
+    }
+
+    private function isvalidate():bool
+    {
+        $validata = new ValidationData();
+        $validata->setIssuer(JwtMaker::$issuer);
+        $validata->setAudience(JwtMaker::$audience);
+        $validata->setId($this->uid);
+        return $this->token->validate($validata);
     }
 }

@@ -3,14 +3,13 @@ namespace Framework;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Service\Logger\LoggerFactory;
 use Service\Util;
 use Framework\MyExchanger;
 use PDO;
 
 class MyApp
 {
-    const ROUTES_PATH = ROOT_PATH.'/include/routes.php';
+    const ROUTES_PATH = ROOT_PATH.'include/routes.php';
     //数据库参数
     public static $db;
     //请求的内容
@@ -80,7 +79,7 @@ class MyApp
         }
     }
 
-    public static function setResponse(int $status = 1000,string $msg = '')
+    public static function setResponse(int $status = 1000,$msg = null)
     {
         self::$status = $status;
         self::$msg = $msg;
@@ -166,13 +165,17 @@ class MyApp
 
     private function createResponse(): string
     {
-        if (is_string(self::$msg)) {
-            $msg = '"'.self::$msg.'"';
+        if (is_string(self::$msg) && !empty(self::$msg)) {
+            if (in_array(self::$msg[0],['{','['])) {
+                $msg = self::$msg;
+            } else {
+                $msg = '"'.self::$msg.'"';
+            }
         } else {
             $msg = 'null';
         }
         
-        if (is_string(self::$res)) {
+        if (is_string(self::$res) && !empty(self::$res)) {
             if (in_array(self::$res[0],['{','['])) {
                 $res = self::$res;
             } else {

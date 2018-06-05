@@ -23,22 +23,19 @@ class Request
         return self::send($options);
     }
 
-    public static function FormPost()
+    public static function formPost($options)
     {
-        if (isset($options['data'])) {
-            if (is_array($option['data'])) {
-                $options['data'] = $options['data'];
-            }
+        if (isset($options['data']) && is_array($option['data'])) {
+            $options['data'] = $options['data'];
         }
 
         $options = array_merge_recursive($options, array(
             'method' => 'POST',
-            'headers' => array('Content-Type: application/json; charset=utf-8'),
+            'headers' => array('Content-Type: charset=utf-8'),
         ));
 
         return self::send($options);
     }
-
 
     public static function send($options)
     {

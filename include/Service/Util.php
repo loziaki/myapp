@@ -6,7 +6,7 @@ use \PDO;
 class Util
 {
     public static $db;
-    public static function getMySQLInstrance()
+    public static function & getMySQLInstrance()
     {
         //初始化数据库连接
         try {
