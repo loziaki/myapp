@@ -1,5 +1,5 @@
 {
-  "name": "yaokun.hu/9fbank_report",
+  "name": "6773/myapp",
   "require": {
     "lcobucci/jwt": "*",
     "symfony/http-foundation": "^3.3"
