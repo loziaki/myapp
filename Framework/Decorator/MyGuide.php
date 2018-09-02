@@ -1,23 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 namespace Framework;
 
-class MyGuider implements Handle
+class MyGuider extends Decoractor
 {
     const ROUTES_PATH = ROOT_PATH.'include/routes.php';
 
-    public $app;
-
-    public function __construct(MyApp $app)
+    public function __construct(MyApp $app,string $method,string $path)
     {
-        $this->app = $app;
+        parent::__construct($app);
+        $this->method = $method;
+        $this->path = $path;
     }
 
-    public function getRouteInfo(): array
-    {
-        
-    }
-
-    public function guide(string $method,string $path)
+    public function handle(): bool
     {
         if (!file_exists(self::ROUTES_PATH)) {
             throw new \Framework\MyException('there is no routes.php',10101);
@@ -29,11 +24,7 @@ class MyGuider implements Handle
 
         $routesMap = require self::ROUTES_PATH;
         if (!isset($routesMap[$this->method][$this->path])) {
-            return [
-                'middleware' => [],
-                'controller' => null,
-                'action' => null,
-            ];
+            throw new \Framework\MyException('no matching router',10105);
         }
 
         $route = $routesMap[$this->method][$this->path];
@@ -59,10 +50,7 @@ class MyGuider implements Handle
             throw new \Framework\MyException('bad path parameters',10104);
         }
 
-        return [
-            'middleware' => $middlewares,
-            'controller' => $cname,
-            'action' => $aname,
-        ];
+        $this->app->setCAM($cname,$aname,$middlewares);
+        return true;
     }
 }

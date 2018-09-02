@@ -47,7 +47,6 @@ class MyApp implements Handle
         self::$res = '';
         
         self::$db = Util::getMySQLInstrance();
-        self::$preset = new MyExchanger();
 
         if (strtoupper(PHP_SAPI) === 'CLI') {
             return new CliDriver(new static());
@@ -58,10 +57,10 @@ class MyApp implements Handle
 
     public function __construct($controller = null, $action = 'index',$middlewares = [])
     {
-        $this->setMCA($controller,$action,$middlewares);
+        $this->setCAM($controller,$action,$middlewares);
     }
 
-    public function setMCA($controller,$action,$middlewares)
+    public function setCAM($controller,$action,$middlewares)
     {
         $this->middlewares = $middlewares;
         $this->controller = $controller;
@@ -70,7 +69,7 @@ class MyApp implements Handle
 
     public function handle(): bool
     {
-        if (empty($this->middlewares) || empty($this->controller)) {
+        if (empty($this->action) || empty($this->controller)) {
             return false;
         }
         try {
@@ -90,6 +89,11 @@ class MyApp implements Handle
     private function cook(): bool
     {
         $result = true;
+        if (count($this->middlewares) == 0) {
+            return true;;
+        }
+
+        self::$preset = new MyExchanger();
         foreach ($this->middlewares as $m) {
             if (!class_exists($m)) {
                 return fasle;
