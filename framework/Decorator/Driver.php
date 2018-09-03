@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
-namespace Framework;
+namespace Framework\Decorator;
 
-abstract class Driver extends Decoractor
+abstract class Driver extends Decorator
 {
     public function handle(): bool
     {
@@ -10,6 +10,9 @@ abstract class Driver extends Decoractor
             $method = $this->getMethod();
             $path = $this->getPath();
             (new MyGuide($this->app,$method,$path))->handle();
+            if (false === \Framework\MyApp::isThereOwnRes()) {
+                $this->success();
+            }
         } catch(Exception $e) {
             $this->exception();
         } catch(Error $err) {

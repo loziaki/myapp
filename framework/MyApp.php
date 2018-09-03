@@ -8,6 +8,7 @@ use PDO;
 class MyApp implements Handle
 {
     const ROUTES_PATH = ROOT_PATH.'include/routes.php';
+    const CODE_PROBLEM = 0;
     const CODE_EXCEPTION = -1;
     const CODE_ERROR = -2;
     //数据库参数
@@ -32,10 +33,25 @@ class MyApp implements Handle
         self::$status = $status;
         self::$msg = $msg;
     }
+
+    public static function getResponse()
+    {
+        return [
+            'status' => self::$status,
+            'msg' => self::$msg,
+            'res' => self::$res,
+        ];
+    }
+
     //设置
     public static function hasResponse(bool $flag)
     {
         self::$hasRes = $flag;
+    }
+
+    public static function isThereOwnRes()
+    {
+        return self::$hasRes;
     }
 
     public static function create()
@@ -46,12 +62,14 @@ class MyApp implements Handle
         self::$msg = '';
         self::$res = '';
         
-        self::$db = Util::getMySQLInstrance();
+        if (defined('DB_TYPE')) {
+            self::$db = Util::getMySQLInstrance();
+        }
 
         if (strtoupper(PHP_SAPI) === 'CLI') {
-            return new CliDriver(new static());
+            return new Decorator\MyCliDriver(new static());
         } else {
-            return new CgiDriver(new static());
+            return new Decorator\MyCgiDriver(new static());
         }
     }
 
@@ -70,6 +88,7 @@ class MyApp implements Handle
     public function handle(): bool
     {
         if (empty($this->action) || empty($this->controller)) {
+            self::setResponse(self::CODE_PROBLEM,'DO NOTHING');
             return false;
         }
         try {
@@ -111,11 +130,12 @@ class MyApp implements Handle
         $c = $this->controller;
         
         if (class_exists($c)) {
-            $controller = new $cname();
+            $controller = new $c();
             if (method_exists($controller,$a)) {
                 return $controller->$a();
             }
         }
-        return null;
+        self::setResponse(self::CODE_PROBLEM,'DO NOTHING');
+        return;
     }
 }

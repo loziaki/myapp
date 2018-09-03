@@ -3,9 +3,9 @@
 
 
 $routes = array(
-    'GET' =>array(
-        'test' => 'testController@test'
-    ),
+    // 'GET' =>array(
+    //     'test' => 'TestController@test'
+    // ),
     
     'POST' => array(
         'login' => [

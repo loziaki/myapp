@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
-namespace Framework;
+namespace Framework\Decorator;
 
-class MyGuider extends Decoractor
+class MyGuide extends Decorator
 {
     const ROUTES_PATH = ROOT_PATH.'include/routes.php';
 
-    public function __construct(MyApp $app,string $method,string $path)
+    public function __construct(\Framework\MyApp $app,string $method,string $path)
     {
         parent::__construct($app);
         $this->method = $method;
@@ -15,21 +15,21 @@ class MyGuider extends Decoractor
     public function handle(): bool
     {
         if (!file_exists(self::ROUTES_PATH)) {
-            throw new Exception('there is no routes.php',10101);
+            throw new \Exception('there is no routes.php',10101);
         }
 
         if (empty($this->method) || empty($this->path)) {
-            throw new Exception('bad path parameters',10102);
+            throw new \Exception('bad path parameters',10102);
         }
 
         $routesMap = require self::ROUTES_PATH;
         if (!isset($routesMap[$this->method][$this->path])) {
-            throw new Exception('no matching router',10105);
+            throw new \Exception('no matching router',10105);
         }
 
         $route = $routesMap[$this->method][$this->path];
 
-        if (is_stinrg($route)) {
+        if (is_string($route)) {
             $middlewares = [];
             $action = $route;
         } elseif (is_array($route)) {
@@ -40,18 +40,19 @@ class MyGuider extends Decoractor
             }
             $action = $route['action'];
         } else {
-            throw new Exception('bad path parameters',10104);
+            throw new \Exception('bad path parameters',10104);
         }
 
-        if (is_string($route['action']) && strpos($route['action'],'@') > 0) {
+        if (is_string($action) && strpos($action,'@') > 0) {
             $arr = explode('@',$action);
             $cname = 'Controller\\'.$arr[0];
             $aname = $arr[1];
         } else {
-            throw new Exception('bad route config',10103);
+            throw new \Exception('bad route config',10103);
         }
 
         $this->app->setCAM($cname,$aname,$middlewares);
+        $this->app->handle();
         return true;
     }
 }
