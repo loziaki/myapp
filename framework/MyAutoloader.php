@@ -16,7 +16,7 @@ class MyAutoloader {
 
         if (file_exists(self::DIY_MAPPING_PATH)) {
             $diyMappping = require(self::DIY_MAPPING_PATH);
-            self::$mappings = array_merge($baseMappping,$diyMappping);
+            self::$mappings = array_merge($baseMapping,$diyMappping);
         } else {
             self::$mappings = $baseMappping;
         }

@@ -114,11 +114,12 @@ class MyApp implements Handle
 
         self::$preset = new MyExchanger();
         foreach ($this->middlewares as $m) {
+            $m = '\\Middleware\\'.$m;
             if (!class_exists($m)) {
-                return fasle;
+                return false;
             }
             if (false === (new $m())->handle()) {
-                return fasle;
+                return false;
             }
         }
         return true;
