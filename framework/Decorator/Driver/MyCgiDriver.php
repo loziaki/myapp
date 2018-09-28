@@ -24,48 +24,64 @@ class MyCgiDriver extends Driver
 
     public function success()
     {
-        $resJson = $this->createResponse();
+        $resJson = $this->createMyAppResponse();
         $response = new Response($resJson,Response::HTTP_OK,$this->getHeaders());
         $response->send();
     }
 
-    public function exception()
+    public function exception(\Exception $e)
     {
-        $response = new Response('',Response::HTTP_NOT_FOUND,$this->getHeaders());
-        $response->send(); 
+        if (defined('ENV') && ENV === 'dev') {
+            $resBody = [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ];
+            $resJson = $this->createResponse(0,$e->getMessage(),json_encode($resBody));
+            $response = new Response($resJson,Response::HTTP_OK,$this->getHeaders());
+            $response->send();
+        } else {
+            $response = new Response('',Response::HTTP_NOT_FOUND,$this->getHeaders());
+            $response->send(); 
+        }
     }
 
-    public function error()
+    public function error(\Error $err)
     {
-        $response = new Response('',Response::HTTP_INTERNAL_SERVER_ERROR,$this->getHeaders());
-        $response->send(); 
+        if (defined('ENV') && ENV === 'dev') {
+            $resBody = [
+                'file' => $err->getFile(),
+                'line' => $err->getLine()
+            ];
+            $resJson = $this->createResponse(0,$err->getMessage(),json_encode($resBody));
+            $response = new Response($resJson,Response::HTTP_OK,$this->getHeaders());
+            $response->send();
+        } else {
+            $response = new Response('',Response::HTTP_INTERNAL_SERVER_ERROR,$this->getHeaders());
+            $response->send(); 
+        }
     }
 
-    private function createResponse(): string
+    private function createMyAppResponse(): string
     {
         list($status,$msg,$res) = array_values(MyApp::getResponse());
+        return $this->createResponse($status,$msg,$res);
+    }
 
-        if (is_string($msg) && !empty($msg)) {
-            if (in_array($msg[0],['{','['])) {
-                $msg = $msg;
-            } else {
-                $msg = '"'.$msg.'"';
-            }
+    private function createResponse($status,$msg,$res): string
+    {
+        if (is_string($msg) && !empty($msg) && in_array($msg[0], ['{','[','"'])) {
+            $msg = $msg;
         } else {
-            $msg = 'null';
-        }
-        
-        if (is_string($res) && !empty($res)) {
-            if (in_array($res[0],['{','['])) {
-                $res = $res;
-            } else {
-                $res = '"'.$res.'"';
-            }
-        } else {
-            $res = '"'.(string)$res.'"';;
+            $msg = json_encode($msg);
         }
 
-        return sprintf('{"status":%d,"msg":%s,"res":%s}', 
+        if (is_string($res) && !empty($res) && in_array($res[0], ['{','[','"'])) {
+            $res = $res;
+        } else {
+            $res = json_encode($res);
+        }
+
+        return sprintf('{"status":%d,"msg":%s,"res":%s}',
             intval($status), $msg, $res
         );
     }

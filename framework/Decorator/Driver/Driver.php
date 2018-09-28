@@ -13,10 +13,10 @@ abstract class Driver extends Decorator
             if (false === \Framework\MyApp::isThereOwnRes()) {
                 $this->success();
             }
-        } catch(Exception $e) {
-            $this->exception();
-        } catch(Error $err) {
-            $this->error();
+        } catch(\Exception $e) {
+            $this->exception($e);
+        } catch(\Error $err) {
+            $this->error($err);
         }
         return true;
     }
@@ -25,6 +25,6 @@ abstract class Driver extends Decorator
     abstract public function getPath(): string;
     abstract public function ready();
     abstract public function success();
-    abstract public function exception();
-    abstract public function error();
+    abstract public function exception(\Exception $e);
+    abstract public function error(\Error $err);
 }
