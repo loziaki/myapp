@@ -108,11 +108,11 @@ class MyApp implements Handle
     private function cook(): bool
     {
         $result = true;
+        self::$preset = new MyExchanger();
         if (count($this->middlewares) == 0) {
-            return true;;
+            return true;
         }
 
-        self::$preset = new MyExchanger();
         foreach ($this->middlewares as $m) {
             $m = '\\Middleware\\'.$m;
             if (!class_exists($m)) {
