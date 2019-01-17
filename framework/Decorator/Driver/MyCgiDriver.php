@@ -76,7 +76,7 @@ class MyCgiDriver extends Driver
         if (is_string($res) && !empty($res) && in_array($res[0], ['{','[','"'])) {
             $res = $res;
         } else {
-            $res = json_encode($res);
+            $res = json_encode($res,JSON_UNESCAPED_UNICODE);
         }
 
         return sprintf('{"status":%d,"msg":%s,"res":%s}',
