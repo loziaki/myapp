@@ -33,8 +33,7 @@ class MyCgiDriver extends Driver
     {
         if (defined('ENV') && ENV === 'dev') {
             $resBody = [
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'trace' => $e->getTrace()
             ];
             $resJson = $this->createResponse(0,$e->getMessage(),json_encode($resBody));
             $response = new Response($resJson,Response::HTTP_OK,$this->getHeaders());
@@ -49,8 +48,7 @@ class MyCgiDriver extends Driver
     {
         if (defined('ENV') && ENV === 'dev') {
             $resBody = [
-                'file' => $err->getFile(),
-                'line' => $err->getLine()
+                'trace' => $err->getTrace()
             ];
             $resJson = $this->createResponse(0,$err->getMessage(),json_encode($resBody));
             $response = new Response($resJson,Response::HTTP_OK,$this->getHeaders());
