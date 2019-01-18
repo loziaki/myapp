@@ -6,6 +6,8 @@ use PDO;
 
 class User extends DataModel
 {
+    const TABLE_NAME = 'cc_user';
+
     protected $uid;
     protected $openid;
     protected $nickName;
