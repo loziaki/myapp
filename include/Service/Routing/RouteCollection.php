@@ -22,11 +22,20 @@ class RouteCollection
         $this->middleware = [];
     }
 
-    public function group(callable $fun)
+    public function group($routes)
     {
         $this->setgroupMiddleware(); 
-        $fun();
+        $this->loadRoutes($routes);
         $this->resetgroupMiddleware();
+    }
+
+    private function loadRoutes($routes)
+    {
+        if ($routes instanceof \Closure) {
+            $routes();
+        } else {
+            require $routes;
+        }
     }
 
     public function middleware($middleware = [])
@@ -59,8 +68,9 @@ class RouteCollection
     }
 
     //去生产一个路由控件
-    public static function compile()
+    public static function getRoutes()
     {
+        return self::$routes;
         //然后填充到全局变量上
         file_put_contents('test',json_encode(self::$routes,JSON_PRETTY_PRINT));
     }
