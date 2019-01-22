@@ -1,5 +1,5 @@
 <?php
-use \Routing\Route;
+use MyApp\Routing\Route;
 
 Route::get('test1','TestController@abc');
 Route::post('test2','TestController@cde');

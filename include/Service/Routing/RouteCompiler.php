@@ -1,5 +1,5 @@
 <?php
-namespace Routing;
+namespace MyApp\Routing;
 
 class RouteCompiler
 {
@@ -7,16 +7,16 @@ class RouteCompiler
         $BASE_DIR = dirname(__FILE__).'/';
 
         Switch($classname) {
-            case 'Routing\Route':
+            case 'MyApp\Routing\Route':
                 require $BASE_DIR.'/Route.php';break;
-            case 'Routing\RouteCollection':
+            case 'MyApp\Routing\RouteCollection':
                 require $BASE_DIR.'/RouteCollection.php';break;
         }
     }
 
     public static function compile($path)
     {
-        spl_autoload_register(['Routing\RouteCompiler','load'], true, true);
+        spl_autoload_register(['MyApp\Routing\RouteCompiler','load'], true, true);
 
         if (file_exists($path) && preg_match('/\.php$/',$path)) {
             require $path;
@@ -36,7 +36,7 @@ class RouteCompiler
 
     public function output($path)
     {
-        $routes = \Routing\RouteCollection::getRoutes();
+        $routes = \MyApp\Routing\RouteCollection::getRoutes();
 
         $export = var_export($routes,true);
         $export = preg_replace("/^([ ]*)(.*)/m", '$1$1$2', $export);

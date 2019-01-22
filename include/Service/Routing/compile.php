@@ -6,6 +6,6 @@ require BASE_DIR.'RouteCompiler.php';
 $routes_file_path = BASE_DIR.'routes.php';
 $output_path = BASE_DIR.'../../routes.php';
 
-\Routing\RouteCompiler::compile($routes_file_path)->output($output_path);
+MyApp\Routing\RouteCompiler::compile($routes_file_path)->output($output_path);
 
 
