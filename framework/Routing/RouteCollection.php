@@ -40,8 +40,15 @@ class RouteCollection
 
     public function middleware($middleware = [])
     {
+        if (!is_array($middleware)) {
+            $middleware = [$middleware];
+        }
         $this->middleware = $middleware;
-        $this->add();
+        if (issset(self::$routes[$this->method][$this->path]['middleware'])) {
+            self::$routes[$this->method][$this->path]['middleware'].= ','.implode(',',$middleware);
+        } else {
+            self::$routes[$this->method][$this->path]['middleware'] = implode(',',$middleware);
+        }
     }
 
     public function set($method,$path,$action)
@@ -71,8 +78,6 @@ class RouteCollection
     public static function getRoutes()
     {
         return self::$routes;
-        //然后填充到全局变量上
-        file_put_contents('test',json_encode(self::$routes,JSON_PRETTY_PRINT));
     }
 
     public function setgroupMiddleware()
