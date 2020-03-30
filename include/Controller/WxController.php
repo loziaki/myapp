@@ -19,7 +19,7 @@ class WxController
         } catch (PDOException $e) {
             throw new Exception('can not get the token param');
         }
-        
+
         list($status, $body) = array_values(Request::jsonPost([
             'url' => 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' . $accessToken,
             'timeout' => 3000,

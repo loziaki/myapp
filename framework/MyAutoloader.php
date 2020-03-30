@@ -1,13 +1,15 @@
 <?php
 namespace Framework;
 
-class MyAutoloader {
+class MyAutoloader
+{
     public static $mappings = array();
 
     const DIY_MAPPING_PATH = ROOT_PATH.'include/mapping.php';
     const APP_MAPPING_PATH = ROOT_PATH.'framework/baseMapping.php';
 
-    public static function register() {
+    public static function register()
+    {
         if (function_exists('__autoload')) {
             spl_autoload_register('__autoload');
         }
@@ -16,7 +18,7 @@ class MyAutoloader {
 
         if (file_exists(self::DIY_MAPPING_PATH)) {
             $diyMappping = require(self::DIY_MAPPING_PATH);
-            self::$mappings = array_merge($baseMapping,$diyMappping);
+            self::$mappings = array_merge($baseMapping, $diyMappping);
         } else {
             self::$mappings = $baseMappping;
         }
@@ -28,8 +30,9 @@ class MyAutoloader {
         }
     }
 
-    public static function load($class) {
-        if(!class_exists($class)){
+    public static function load($class)
+    {
+        if (!class_exists($class)) {
             //check if this is some mappings
             if (isset(static::$mappings[$class])) {
                 include static::$mappings[$class];
@@ -37,7 +40,7 @@ class MyAutoloader {
             }
 
             //can not find in the mappings variable ,then load the file by namespace
-            $dir  = ROOT_PATH.'include/';
+            $dir  = ROOT_PATH.'include'.DIRECTORY_SEPARATOR;
             $str  = str_replace('\\', DIRECTORY_SEPARATOR, $class);
             $file = $dir.$str.'.php';
             if (file_exists($file) && !class_exists($class, false)) {

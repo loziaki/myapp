@@ -1,26 +1,23 @@
 <?php
 namespace Middleware;
 
-use Framework\MyApp;
-use \Framework\MiddlewareInterface;
-
-class GetWxInfo implements MiddlewareInterface
+class GetWxInfo extends \Framework\Middleware
 {
     const WX_HEADER_CODE = 'code';
     const WX_HEADER_ENCRYPTED_DATA = 'encryptedData';
     const WX_HEADER_IV = 'iv';
 
-    public function handle(): bool
+    public function handle(&$customParams, $request)
     {
         //copy from wafer sdk ：loginservice
-        $code = MyApp::$request->headers->get(self::WX_HEADER_CODE);
-        $encryptedData = MyApp::$request->headers->get(self::WX_HEADER_ENCRYPTED_DATA);
-        $iv = MyApp::$request->headers->get(self::WX_HEADER_IV);
-        $all = MyApp::$request->headers->all();
+        $code = $request->headers->get(self::WX_HEADER_CODE);
+        $encryptedData = $request->headers->get(self::WX_HEADER_ENCRYPTED_DATA);
+        $iv = $request->headers->get(self::WX_HEADER_IV);
+        $all = $request->headers->all();
 
-        MyApp::$preset->set('wx_code',$code);
-        MyApp::$preset->set('wx_encryptedData',$encryptedData);
-        MyApp::$preset->set('wx_iv',$iv);
+        $customParams['wx_code'] = $code;
+        $customParams['wx_encryptedData'] = $encryptedData;
+        $customParams['wx_iv'] = $iv;
 
         return true;
     }

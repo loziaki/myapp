@@ -1,142 +1,109 @@
 <?php declare(strict_types=1);
 namespace Framework;
 
-use Service\Util;
-use Framework\MyExchanger;
-use PDO;
+use \Symfony\Component\HttpFoundation\Response;
+use \Symfony\Component\HttpFoundation\Request;
 
-class MyApp implements Handle
+class MyApp
 {
-    const ROUTES_PATH = ROOT_PATH.'include/routes.php';
-    const CODE_PROBLEM = 0;
     const CODE_EXCEPTION = -1;
-    const CODE_ERROR = -2;
+    const CODE_ERROR           = -2;
+
+    const DEFAULT_HEADERS = [
+        'content-type' => 'application/json',
+        'charset' => 'utf-8',
+        // 'Access-Control-Allow-Origin' => '*'
+    ];
+
     //数据库参数
     public static $db;
-    //请求的内容
-    public static $request;
-    //让controller控制是否需要myapp返回内容
-    private static $hasRes;
-    //用于给middleware 与 controller通信用
-    public static $preset;
-
-    private static $status;
-    private static $msg;
-    private static $res;
-
-    private $middlewares;
-    private $controller;
-    private $action;
-
-    public static function setResponse(int $status = 1000,$msg = null)
-    {
-        self::$status = $status;
-        self::$msg = $msg;
-    }
-
-    public static function getResponse()
-    {
-        return [
-            'status' => self::$status,
-            'msg' => self::$msg,
-            'res' => self::$res,
-        ];
-    }
-
-    //设置
-    public static function hasResponse(bool $flag)
-    {
-        self::$hasRes = $flag;
-    }
-
-    public static function isThereOwnRes()
-    {
-        return self::$hasRes;
-    }
 
     public static function create()
     {
-        //初始化
-        self::$hasRes = false;
-        self::$status = 1000;
-        self::$msg = '';
-        self::$res = '';
-        
-        if (defined('DB_TYPE')) {
-            self::$db = Util::getMySQLInstrance();
-        }
-
-        if (strtoupper(PHP_SAPI) === 'CLI') {
-            return new Decorator\MyCliDriver(new static());
-        } else {
-            return new Decorator\MyCgiDriver(new static());
-        }
+        return new static();
     }
 
-    public function __construct($controller = null, $action = 'index',$middlewares = [])
+    /**
+     * $code int
+     * $msg 错误信息
+     */
+    public static function setResponse()
     {
-        $this->setCAM($controller,$action,$middlewares);
+
     }
 
-    public function setCAM($controller,$action,$middlewares)
+    /**
+     *  $view \Framework\View
+     */
+    public function handle($view)
     {
-        $this->middlewares = $middlewares;
-        $this->controller = $controller;
-        $this->action = $action;
-    }
-
-    public function handle(): bool
-    {
-        if (empty($this->action) || empty($this->controller)) {
-            self::setResponse(self::CODE_PROBLEM,'DO NOTHING');
-            return false;
-        }
         try {
-            if ($this->cook()) {
-                self::$res = $this->reply();
+            //给view设置一个全局db
+            if (defined('DB_TYPE')) {
+                $view->db = \Service\Util::getMySQLInstrance();
             }
-            return true;
-        } catch(Exception $e) {
-            self::setResponse(self::CODE_EXCEPTION,'SOME UNCAUGTH EXCEPTION');
-            throw $e;
-        } catch(Error $err) {
-            self::setResponse(self::CODE_ERROR,'SOME UNCAUGTH ERROR');
-            throw $err;
-        }
-    }
-    //调用中间件处理整个请求
-    private function cook(): bool
-    {
-        $result = true;
-        if (count($this->middlewares) == 0) {
-            return true;;
-        }
 
-        self::$preset = new MyExchanger();
-        foreach ($this->middlewares as $m) {
-            $m = '\\Middleware\\'.$m;
-            if (!class_exists($m)) {
-                return false;
-            }
-            if (false === (new $m())->handle()) {
-                return false;
-            }
+            //使用 symfony/http-foundation
+            // https://symfony.com/doc/current/components/http_foundation.html#installation
+            $req = Request::createFromGlobals();
+
+            //开始处理
+            $res = $view->dispatch($req);
+        } catch (\Exception $e) {
+            $res = $this->exception($e);
+        } catch (\Error $err) {
+            $res = $this->error($err);
         }
-        return true;
+        if ($res instanceof Response) {
+            $response->headers->add(self::DEFAULT_HEADERS);
+            $response->send();
+        } else {
+            header("Content-type: text/html; charset=utf-8");
+        }
+        exit;
     }
 
-    private function reply()
+    /**
+     * $e \Exception
+     */
+    public function exception($e)
     {
-        $a = $this->action.'Action';
-        $c = $this->controller;
-        
-        if (class_exists($c)) {
-            $controller = new $c();
-            if (method_exists($controller,$a)) {
-                return $controller->$a();
-            }
+        if (defined('ENV') && ENV === 'dev') {
+            $resBody = [
+                'code' => CODE_EXCEPTION,
+                'msg' => $e->getMessage(),
+                'trace' => $e->getTrace()
+            ];
+            $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
+            $response = new Response($resJson, Response::HTTP_OK);
+            $response->send();
+        } else {
+            $response = new Response('', Response::HTTP_INTERNAL_SERVER_ERROR);
+            $response->send();
         }
-        self::setResponse(self::CODE_PROBLEM,'DO NOTHING');
-        return;
+
+        return $response;
+    }
+
+    /**
+     *  $err Error
+     */
+    public function error($err)
+    {
+        if (defined('ENV') && ENV === 'dev') {
+            $resBody = [
+                'code' => CODE_ERROR,
+                'msg' => $e->getMessage(),
+                'trace' => $e->getTrace()
+            ];
+            $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
+            $response = new Response($resJson, Response::HTTP_OK);
+            $response->send();
+        } else {
+            $response = new Response('', Response::HTTP_INTERNAL_SERVER_ERROR);
+            $response->send();
+        }
+
+        return $response;
     }
 }
