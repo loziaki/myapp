@@ -6,8 +6,9 @@ use \Symfony\Component\HttpFoundation\Request;
 
 class MyApp
 {
-    const CODE_EXCEPTION = -1;
-    const CODE_ERROR           = -2;
+    const CODE_SUCCESS      = 1;
+    const CODE_EXCEPTION = -101;
+    const CODE_ERROR           = -102;
 
     const DEFAULT_HEADERS = [
         'content-type' => 'application/json',
@@ -21,15 +22,6 @@ class MyApp
     public static function create()
     {
         return new static();
-    }
-
-    /**
-     * $code int
-     * $msg 错误信息
-     */
-    public static function setResponse()
-    {
-
     }
 
     /**
@@ -55,8 +47,8 @@ class MyApp
             $res = $this->error($err);
         }
         if ($res instanceof Response) {
-            $response->headers->add(self::DEFAULT_HEADERS);
-            $response->send();
+            $res->headers->add(self::DEFAULT_HEADERS);
+            $res->send();
         } else {
             header("Content-type: text/html; charset=utf-8");
         }
@@ -68,19 +60,17 @@ class MyApp
      */
     public function exception($e)
     {
-        if (defined('ENV') && ENV === 'dev') {
-            $resBody = [
-                'code' => CODE_EXCEPTION,
-                'msg' => $e->getMessage(),
-                'trace' => $e->getTrace()
-            ];
-            $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
-            $response = new Response($resJson, Response::HTTP_OK);
-            $response->send();
-        } else {
-            $response = new Response('', Response::HTTP_INTERNAL_SERVER_ERROR);
-            $response->send();
-        }
+        $eCode = $e->getCode();
+        $eCode = (empty($eCode))? 'undefine' : $eCode;
+
+        $resBody = [
+            'code' => self::CODE_EXCEPTION,
+            'msg' => '['.$eCode.']'.$e->getMessage(),
+            'trace' => $e->getTrace()
+        ];
+        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
+        $response = new Response($resJson, Response::HTTP_OK);
+        $response->send();
 
         return $response;
     }
@@ -88,21 +78,19 @@ class MyApp
     /**
      *  $err Error
      */
-    public function error($err)
+    public function error($e)
     {
-        if (defined('ENV') && ENV === 'dev') {
-            $resBody = [
-                'code' => CODE_ERROR,
-                'msg' => $e->getMessage(),
-                'trace' => $e->getTrace()
-            ];
-            $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
-            $response = new Response($resJson, Response::HTTP_OK);
-            $response->send();
-        } else {
-            $response = new Response('', Response::HTTP_INTERNAL_SERVER_ERROR);
-            $response->send();
-        }
+        $eCode = $e->getCode();
+        $eCode = (empty($eCode))? 'undefine' : $eCode;
+
+        $resBody = [
+            'code' => self::CODE_ERROR,
+            'msg' => '['.$eCode.']'.$e->getMessage(),
+            'trace' => $e->getTrace()
+        ];
+        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
+        $response = new Response($resJson, Response::HTTP_OK);
+        $response->send();
 
         return $response;
     }

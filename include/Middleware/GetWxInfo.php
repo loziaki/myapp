@@ -7,7 +7,7 @@ class GetWxInfo extends \Framework\Middleware
     const WX_HEADER_ENCRYPTED_DATA = 'encryptedData';
     const WX_HEADER_IV = 'iv';
 
-    public function handle(&$customParams, $request)
+    public function handle(&$appParams, $request)
     {
         //copy from wafer sdk ：loginservice
         $code = $request->headers->get(self::WX_HEADER_CODE);

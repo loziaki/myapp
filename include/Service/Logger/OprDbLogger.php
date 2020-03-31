@@ -7,7 +7,7 @@ use Exception;
 
 class OprDbLogger implements LoggerInterface
 {
-    
+
     public function saveLog($message): bool
     {
         $uid = MyApp::$preset->get('uid');

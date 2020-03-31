@@ -3,7 +3,7 @@ namespace View;
 
 class Test extends \Framework\BaseView
 {
-    public function handleGet($customParams, $request)
+    public function handleGet($appParams, $customParams)
     {
         echo 1;
         return;

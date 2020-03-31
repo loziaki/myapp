@@ -43,8 +43,8 @@ class Request
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $options['method']);
         curl_setopt($ch, CURLOPT_URL, $options['url']);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
 
         if (isset($options['headers'])) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $options['headers']);
@@ -61,8 +61,8 @@ class Request
         $result = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        $body = json_decode($result, TRUE);
-        if ($body === NULL) {
+        $body = json_decode($result, true);
+        if ($body === null) {
             $body = $result;
         }
 

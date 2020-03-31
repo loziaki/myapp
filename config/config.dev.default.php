@@ -19,8 +19,5 @@ define('JTI_CLAIM','677_0HBMc89F9VNbBF3K');
 define('ISS_CLAIM','677_server');
 define('AUD_CLAIM','677_claim');
 
-define('SMTP_HOST','smtp.677.cn');
-define('SMTP_USR','testsuser');
-define('SMTP_PW','testsuser');
 
 define('DING_ROBOT','');

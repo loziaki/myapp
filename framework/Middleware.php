@@ -9,6 +9,6 @@ class Middleware
      */
     public function handle($request)
     {
-
+        return true;
     }
 }

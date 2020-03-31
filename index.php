@@ -2,7 +2,7 @@
 //初始化
 require 'init.php';
 //注册logger
-Service\Logger\LoggerFactory::set('opr', new \Service\Logger\OprDbLogger());
+Service\Logger\LoggerFactory::set('file', new \Service\Logger\FileLogger());
 
 //用路由控件找到一个view
 $_view  = \Service\EasyRouter::path(addslashes(strip_tags(trim($_GET['_path']))));

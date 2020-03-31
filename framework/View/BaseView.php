@@ -1,6 +1,8 @@
 <?php
 namespace Framework;
 
+use \Symfony\Component\HttpFoundation\Response;
+
 class BaseView extends View
 {
     const ALLOW_METHOD_NAMES = ['get','post'];
@@ -13,11 +15,17 @@ class BaseView extends View
      */
     public function post($request)
     {
-        $customParams = $this->validateParam($request);
-        if ($this->cook($customParams, $request)) {
-            return $this->handlePost($customParams, $request);
+        try {
+            $appParams = [];
+            if ($this->cook($appParams, $request)  === true) {
+                $customParams = $this->validateParam($request);
+
+                $res =  $this->handlePost($appParams, $customParams);
+            }
+        } catch (\Framework\View\ParamException $e) {
+            $res =$this->error($e->getMessage(), $e->getCode());
         }
-        return;
+        return $res;
     }
 
     /**
@@ -25,14 +33,20 @@ class BaseView extends View
      */
     public function get($request)
     {
-        $customParams = $this->validateParam($request);
-        if ($this->cook($customParams, $request)) {
-            return $this->handleGet($customParams, $request);
+        try {
+            $appParams = [];
+            if ($this->cook($appParams, $request)  === true) {
+                $customParams = $this->validateParam($request);
+
+                $res =  $this->handleGet($appParams, $customParams);
+            }
+        } catch (\Framework\View\ParamException$e) {
+            $res =  $this->error($e->getMessage(), $e->getCode());
         }
-        return;
+        return $res;
     }
 
-    protected function cook(&$customParams, $request)
+    protected function cook(&$appParams, $request)
     {
         if (empty($this->middlewares)) {
             //不存在middlewares
@@ -44,7 +58,7 @@ class BaseView extends View
             if (!class_exists($m)) {
                 return false;
             }
-            if (!(new $m())->handle($customParams, $request)) {
+            if (!(new $m())->handle($appParams, $request)) {
                 return false;
             }
         }
@@ -57,16 +71,54 @@ class BaseView extends View
      */
     protected function validateParam($request)
     {
-        $customParams = [];
-        if (!is_null($this->validater)) {
-            //过滤多余的参数，获取正确的类型、格式
-            $customParams = $this->validater->program($request);
-        }
 
-        //用于判读一些参数与参数之间的逻辑关系
+        //过滤多余的参数，获取正确的类型、格式
+        $customParams = $this->validate($request);
+
+        //用于判读一些参数与参数之间的逻辑关系，还有一些什么字段是否存在
         $customParams = $this->validateCustomLogic($customParams, $request);
 
+
         return $customParams;
+    }
+
+    /**
+     * $msg string
+     * $code int
+     */
+    protected function error($msg, $code = MyApp::CODE_EXCEPTION)
+    {
+        $resBody = [
+            'code' => $code,
+            'msg' => $msg,
+        ];
+
+        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
+        $response = new Response($resJson, Response::HTTP_OK);
+        return $response;
+    }
+
+    /**
+     * $msg string
+     * $code int
+     */
+    protected function success($data)
+    {
+        $resBody = $data;
+        $resBody['code'] =  MyApp::CODE_SUCCESS;
+        $resBody['msg'] = '';
+
+        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
+        $response = new Response($resJson, Response::HTTP_OK);
+        return $response;
+    }
+
+    /**
+     *  $request \Symfony\Component\HttpFoundation\Request
+     */
+    public function validate($request)
+    {
+        return [];
     }
 
     /**
@@ -79,19 +131,19 @@ class BaseView extends View
     }
 
     /**
+     * $appParams array
      *  $customParams array
-     *  $request                \Symfony\Component\HttpFoundation\Request
      */
-    public function handlePost($customParams, $request)
+    public function handlePost($appParams, $customParams)
     {
         return;
     }
 
     /**
+     * $appParams array
      *  $customParams array
-     * $request                 \Symfony\Component\HttpFoundation\Request
      */
-    public function handleGet($customParams, $request)
+    public function handleGet($appParams, $customParams)
     {
         return;
     }

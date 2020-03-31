@@ -3,5 +3,5 @@ namespace Service\Logger;
 
 interface LoggerInterface
 {
-    function saveLog($message);
+    public function saveLog($message): bool;
 }

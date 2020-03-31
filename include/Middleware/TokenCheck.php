@@ -12,7 +12,7 @@ class TokenCheck extends \Framework\Middleware
     private $token;
     private $uid;
 
-    public function handle(&$customParams, $request)
+    public function handle(&$appParams, $request)
     {
         $tokenStr= $request->cookies->get(Constant::LOGIN_COOKIE_TOKEN, null);
         //是否登录:cookie检查

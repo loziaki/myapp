@@ -1,11 +1,18 @@
 <?php
-namespace Model;
+namespace Service\Model;
 
 use Framework\MyApp;
 
 class DataModel
 {
+    use QueryBuilderModule;
+
+    const TABLE_NAME = '';
+
+    const TABLE_FIELDS = [];
+
     protected $db;
+    private $kwargs;
 
     public function __construct(array $param = [])
     {
@@ -14,91 +21,84 @@ class DataModel
         $this->setValues($param);
     }
 
-    public function setValues(array $param) {
-        $property = $arr = array_keys(get_class_vars(get_class($this)));
+    protected function save()
+    {
+        $param = $this->getParam();
 
-        foreach ($param as $key => $value) {
-            if (in_array($key, $property)) {
-                $this->$key = $value;
+        $fields = array_keys($param);
+        $str1 = '(`'.implode('`, ', $fields).'`)';
+        $str2 = '(:'.implode(', :', $fields).')';
+        $sql ='INSERT '.static::TABLE_NAME.$str1.' VALUES '.$str2;
+        $stat = $this->db->prepare($sql);
+
+        $stat->execute($param);
+        $pk = $this->db->lastInsertId();
+        return $pk;
+    }
+
+    protected function update($uk, $ukValue)
+    {
+        $param = $this->getParam();
+
+        $str1= '';
+        foreach ($param as $k => $v) {
+            $str1 .= '`'.$k.'` = '.$v;
+        }
+        $sql ='UPDATE '.static::TABLE_NAME.' SET '.$str1.' WHERE `'.$uk.'` = '.$ukValue;
+        $stat = $this->db->prepare($sql);
+
+        $stat->execute($param);
+    }
+
+    protected function replace($uk, $ukValue)
+    {
+        $param = $this->getParam();
+        //保证100%有唯一key
+        $param[$uk] = $ukValue;
+
+        $fields = array_keys($param);
+        $str1 = '(`'.implode('`, ', $fields).'`)';
+        $str2 = '(:'.implode(', :', $fields).')';
+        $sql ='REPLACE '.static::TABLE_NAME.$str1.' VALUES '.$str2;
+        $stat = $this->db->prepare($sql);
+
+        $stat->execute($param);
+        $pk = $this->db->lastInsertId();
+        return $pk;
+    }
+
+    protected function getParam()
+    {
+        $param =[];
+        foreach (static::TABLE_FIELDS as $k) {
+            if (array_key_exists($k, $this->kwargs)) {
+                $param[$k] = $this->kwargs[$k];
             }
         }
 
-        return $this;
+        return $param;
     }
 
-    public static function select()
+    public function __get($key)
     {
-        $obj = new self;
-        $query = new QueryBuilder();
-        $query->table(static::TABLE_NAME);
-        $obj->query = $query;
-        return $obj;
+        return $this->kwargs[$key];
     }
 
-    //查多条
-    public function findAll()
+    public function __set($key, $value)
     {
-        list($sql,$data) = $this->query->build();
-        $stat = $this->execute($sql,$data);
-        return $stat->fetchAll(\PDO::FETCH_ASSOC);
+        $this->kwargs[$key] = $value;
     }
 
-    //查一条
-    public function find()
+    public function setValues(array $param)
     {
-        list($sql,$data) = $this->query->build();
-        $stat = $this->execute($sql, $data);
-        return $stat->fetch(\PDO::FETCH_ASSOC);
-    }
+        $property = $this->fields;
 
-    public function value()
-    {
-        list($sql,$data) = $this->query->build();
-        $stat = $this->execute($sql, $data);
-        return $stat->fetchColumn();
-    }
+        foreach ($param as $key => $value) {
+            if (in_array($key, $property)) {
+                $this->kwargs[$key] = $value;
+            }
+        }
 
-    private function execute($sql, $data)
-    {
-        $stat = $this->db->prepare($sql);
-        $stat->execute($data);
-        return $stat;
-    }
-
-    //指定选查询的域
-    public function field(...$args)
-    {
-        $this->query->field(...$args);
-        return $this;
-    }
-
-    public function where(...$args)
-    {
-        $this->query->where(...$args);
-        return $this;
-    }
-
-    public function limit(...$args)
-    {
-        $this->query->limit(...$args);
-        return $this;
-    }
-
-    public function offset(...$args)
-    {
-        $this->query->offset(...$args);
-        return $this;
-    }
-
-    public function orderBy(...$args)
-    {
-        $this->query->orderBy(...$args);
-        return $this;
-    }
-
-    public function groupBy(...$args)
-    {
-        $this->query->groupBy(...$args);
         return $this;
     }
 }
