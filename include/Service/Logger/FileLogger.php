@@ -41,7 +41,7 @@ class FileLogger implements LoggerInterface
 
     private function getLogFilePath($filename)
     {
-        $filename = (empty($filename))? $filename :  date('Y_W');
+        $filename = (empty($filename))? date('Y_W') : $filename;
         return $this->log_storage_path.$filename;
     }
 

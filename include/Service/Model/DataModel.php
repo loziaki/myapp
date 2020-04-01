@@ -16,17 +16,17 @@ class DataModel
 
     public function __construct(array $param = [])
     {
-        $this->db = Util::getMySQLInstrance();
+        $this->db = \Service\Util::getMySQLInstrance();
 
         $this->setValues($param);
     }
 
-    protected function save()
+    public function insert()
     {
         $param = $this->getParam();
 
         $fields = array_keys($param);
-        $str1 = '(`'.implode('`, ', $fields).'`)';
+        $str1 = '(`'.implode('`, `', $fields).'`)';
         $str2 = '(:'.implode(', :', $fields).')';
         $sql ='INSERT '.static::TABLE_NAME.$str1.' VALUES '.$str2;
         $stat = $this->db->prepare($sql);
@@ -36,28 +36,34 @@ class DataModel
         return $pk;
     }
 
-    protected function update($uk, $ukValue)
+    public function update($uk, $ukValue)
     {
         $param = $this->getParam();
 
-        $str1= '';
+        $arr= [];
         foreach ($param as $k => $v) {
-            $str1 .= '`'.$k.'` = '.$v;
+            if (is_numeric($v)) {
+                $arr[] = '`'.$k.'` = '.$v;
+            } else {
+                $arr[] = '`'.$k.'` = "'.$v.'"';
+            }
         }
+        $str1 = implode(', ', $arr);
+
         $sql ='UPDATE '.static::TABLE_NAME.' SET '.$str1.' WHERE `'.$uk.'` = '.$ukValue;
         $stat = $this->db->prepare($sql);
 
         $stat->execute($param);
     }
 
-    protected function replace($uk, $ukValue)
+    public function replace($uk, $ukValue)
     {
         $param = $this->getParam();
         //保证100%有唯一key
         $param[$uk] = $ukValue;
 
         $fields = array_keys($param);
-        $str1 = '(`'.implode('`, ', $fields).'`)';
+        $str1 = '(`'.implode('`, `', $fields).'`)';
         $str2 = '(:'.implode(', :', $fields).')';
         $sql ='REPLACE '.static::TABLE_NAME.$str1.' VALUES '.$str2;
         $stat = $this->db->prepare($sql);
@@ -91,7 +97,7 @@ class DataModel
 
     public function setValues(array $param)
     {
-        $property = $this->fields;
+        $property = static::TABLE_FIELDS;
 
         foreach ($param as $key => $value) {
             if (in_array($key, $property)) {

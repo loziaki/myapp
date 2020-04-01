@@ -8,13 +8,13 @@ class Login extends \Framework\BaseView
 {
     public function validate($request)
     {
-        $request->request->getInt('code');
+        $code  = $request->request->get('code');
         if (empty($code)) {
             throw new \Framework\View\ParamException('缺少code参数');
         }
 
         $encryptedData = $request->request->get('encryptedData');
-        $iv = $request->request->request->get('iv');
+        $iv = $request->request->get('iv');
 
         if (empty($encryptedData) || empty($iv)) {
             throw new \Framework\View\ParamException('缺少用户授权参数');
@@ -29,17 +29,21 @@ class Login extends \Framework\BaseView
 
     public function handlePost($env, $req)
     {
-        $wxsdk = new Wexin(WEIXIN_APP_ID, WEIXIN_APP_SECRET);
-        $wxres = $wxsdk>getAuthData($req['code']);
-        // $wxres['session_key'] = '';
-        $userInfo = $wxsdk->decryptData($req['encryptedData'], $req['iv'], $wxres['session_key']);
-
+        $wxsdk = new \Service\Wxsdk\Weixin(WEIXIN_APP_ID, WEIXIN_APP_SECRET);
+        try {
+            // $wxres = $wxsdk->getAuthData($req['code']);
+            // $userInfo = $wxsdk->decryptData($req['encryptedData'], $req['iv'], $wxres['session_key']);
+        } catch (\Service\Wxsdk\WxsdkException $e) {
+            return $this->error($e->getMessage());
+        }
+        // \file_put_contents(TEMP_DIR.'userinfo', \serialize($userInfo));
+        $userInfo = \unserialize(\file_get_contents(TEMP_DIR.'userinfo'));
         //saveUser
-        $result = WxUser::select()->field('id')->where('openId', $userInfo['openId'])->find();
+        $result = WxUser::select()->field('uid')->where('openId', $userInfo['openId'])->find();
         if ($result == false) {
-            $uid = (new WxUser($userInfo))->insert();
+            $uid = (new WxUser($userInfo))->save();
         } else {
-            (new WxUser($userInfo))->update('uid', $uid);
+            (new WxUser($userInfo))->update('uid', $result['uid']);
         }
 
         $token  = $this->getToken();
@@ -47,9 +51,10 @@ class Login extends \Framework\BaseView
         //saveToken
         (new \Model\TokenInfo([
             'openId' => $userInfo['openId'],
-            'session_key' => $wxres['session_key'],
+            // 'session_key' => $wxres['session_key'],
+            'session_key' => 'test',
             'token'=> $token,
-        ]))->replace('uid', $uid);
+        ]))->save('uid', $result['uid']);
 
         return $this->success(['token'=>$token]);
     }

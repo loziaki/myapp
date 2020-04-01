@@ -1,7 +1,7 @@
 <?php
 namespace Model;
 
-use Model\DataModel;
+use Service\Model\DataModel;
 use PDO;
 
 class WxUser extends DataModel
@@ -21,9 +21,9 @@ class WxUser extends DataModel
         'create_time',
     ];
 
-    public function insert()
+    public function save()
     {
-        $this->uid = $this->save();
+        $this->uid = $this->insert();
         return $this->uid;
     }
 }

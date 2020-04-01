@@ -1,8 +1,7 @@
 <?php
-namespace wxsdk;
+namespace Service\Wxsdk;
 
 use Service\ApiRequest;
-use DataCrypt;
 
 class Weixin
 {
@@ -31,17 +30,17 @@ class Weixin
             'grant_type' => 'authorization_code'
         ];
 
-        list($status, $body) = array_values(Request::get([
+        list($status, $body) = array_values(ApiRequest::get([
             'url' => 'https://api.weixin.qq.com/sns/jscode2session?' . http_build_query($requestParams),
             'timeout' => 3000
         ]));
 
         if ($status !== 200 || !$body) {
-            throw new \Exception('no reply receive from weixin');
+            throw new WxsdkException('no reply receive from weixin');
         }
 
         if (isset($body['errcode'])) {
-            throw new \Exception(json_encode($body));
+            throw new WxsdkException('['.$body['errcode'].']'.$body['errmsg']);
         }
 
         return $body;
@@ -62,7 +61,7 @@ class Weixin
         $wxBizDataCrypt = new DataCrypt($this->appid, $session_key);
         $errCode = $wxBizDataCrypt->decryptData($encryptedData, $iv, $result);
         if ($errCode != 0) {
-            throw new Exception('解密失败,请检查参数是否正确');
+            throw new WxsdkException('解密失败,请检查参数是否正确');
         }
 
         return json_decode($result, true);
@@ -82,17 +81,17 @@ class Weixin
             'grant_type' => 'client_credential'
         ];
 
-        list($status, $body) = array_values(Request::get([
+        list($status, $body) = array_values(ApiRequest::get([
             'url' => 'https://api.weixin.qq.com/cgi-bin/token?' . http_build_query($requestParams),
             'timeout' => 3000
         ]));
 
         if ($status !== 200 || !$body) {
-            throw new \Exception('no reply receive from weixin');
+            throw new WxsdkException('no reply receive from weixin');
         }
 
         if (isset($body['errcode'])) {
-            throw new \Exception(json_encode($body));
+            throw new WxsdkException('['.$body['errcode'].']'.$body['errmsg']);
         }
 
         return $body;
@@ -105,26 +104,26 @@ class Weixin
     public function getQrCodeTypeB($accessToken, $options)
     {
         if (!isset($options['scene']) || !isset($options['page'])) {
-            throw new \Exception('miss params sence or page');
+            throw new WxsdkException('miss params sence or page');
         }
 
-        list($status, $body) = array_values(Request::jsonPost([
+        list($status, $body) = array_values(ApiRequest::jsonPost([
             'url' => 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' . $accessToken,
             'timeout' => 3000,
             'data' => $options
         ]));
 
         if ($status !== 200 || !$body) {
-            throw new \Exception('no reply receive from weixin');
+            throw new WxsdkException('no reply receive from weixin');
         }
 
         if (isset($body['errcode'])) {
-            throw new \Exception(json_encode($body));
+            throw new WxsdkException('['.$body['errcode'].']'.$body['errmsg']);
         }
 
         $qrImage = imagecreatefromstring($body);
         if ($qrImage == false) {
-            throw new \Exception('create qrcode image fail');
+            throw new WxsdkException('create qrcode image fail');
         }
         return $body;
     }

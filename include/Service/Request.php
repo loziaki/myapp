@@ -6,7 +6,7 @@ class Request
     public static function get($options)
     {
         $options['method'] = 'GET';
-        return self::send($options);
+        return static::send($options);
     }
 
     public static function jsonPost($options)
@@ -20,7 +20,7 @@ class Request
             'headers' => array('Content-Type: application/json; charset=utf-8'),
         ));
 
-        return self::send($options);
+        return static::send($options);
     }
 
     public static function formPost($options)
@@ -34,17 +34,17 @@ class Request
             'headers' => array('Content-Type: charset=utf-8'),
         ));
 
-        return self::send($options);
+        return static::send($options);
     }
 
-    public static function send($options)
+    public static function send($options, $raw2json = true)
     {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $options['method']);
         curl_setopt($ch, CURLOPT_URL, $options['url']);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         if (isset($options['headers'])) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $options['headers']);
@@ -61,8 +61,10 @@ class Request
         $result = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        $body = json_decode($result, true);
-        if ($body === null) {
+
+        if ($raw2json === true) {
+            $body = json_decode($result, true);
+        } else {
             $body = $result;
         }
 

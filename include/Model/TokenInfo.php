@@ -1,7 +1,7 @@
 <?php
 namespace Model;
 
-use Model\DataModel;
+use Service\Model\DataModel;
 use PDO;
 
 class TokenInfo extends DataModel
@@ -19,4 +19,12 @@ class TokenInfo extends DataModel
         'last_login_ip',
         'last_login_time',
     ];
+
+    public function save($uk, $ukValue)
+    {
+        $this->token_expire = time() + self::TOKEN_EXPIRE_IN;
+        $this->last_login_ip = \Service\Util::getIp();
+
+        $this->replace($uk, $ukValue);
+    }
 }

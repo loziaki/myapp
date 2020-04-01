@@ -5,14 +5,17 @@ use Service\Logger\LoggerFactory;
 
 class ApiRequest extends Request
 {
-    public static function send($options)
+    public static function send($options, $raw2json = true)
     {
-        $res = parent::send($options);
+        $res = parent::send($options, false);
         $req = \json_encode($options, JSON_UNESCAPED_UNICODE);
-        $log = sprintf('%s - $s - [%s]$s ', date('H:i:s'), $req, $options['status '], $options['body']);
+        $log = sprintf('%s - %s - [%s]%s ', date('H:i:s'), $req, $res['status'], $res['body']);
         $logName = 'req_'.date('Y_W');
-        LoggerFactory::get('opr')->saveLog($log, $logName);
+        LoggerFactory::get('file')->saveLog($log, $logName);
 
+        if ($raw2json === true) {
+            $res['body'] = json_decode($res['body'], true);
+        }
         return $res;
     }
 }

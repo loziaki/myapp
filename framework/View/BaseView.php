@@ -23,7 +23,9 @@ class BaseView extends View
                 $res =  $this->handlePost($appParams, $customParams);
             }
         } catch (\Framework\View\ParamException $e) {
-            $res =$this->error($e->getMessage(), $e->getCode());
+            $eCode = $e->getCode();
+            $eCode = (empty($eCode))? \Framework\MyApp::CODE_EXCEPTION : $eCode;
+            $res =  $this->error($e->getMessage(), $eCode);
         }
         return $res;
     }
@@ -41,7 +43,9 @@ class BaseView extends View
                 $res =  $this->handleGet($appParams, $customParams);
             }
         } catch (\Framework\View\ParamException$e) {
-            $res =  $this->error($e->getMessage(), $e->getCode());
+            $eCode = $e->getCode();
+            $eCode = (empty($eCode))? \Framework\MyApp::CODE_EXCEPTION : $eCode;
+            $res =  $this->error($e->getMessage(), $eCode);
         }
         return $res;
     }
@@ -127,7 +131,7 @@ class BaseView extends View
      */
     protected function validateCustomLogic($customParams, $request)
     {
-        return [];
+        return $customParams;
     }
 
     /**
