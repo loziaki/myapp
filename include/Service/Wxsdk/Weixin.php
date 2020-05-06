@@ -5,6 +5,8 @@ use Service\ApiRequest;
 
 class Weixin
 {
+    use \Service\Wxsdk\TemplateTrait;
+
     private $appid;
     private $appSecret;
 
@@ -95,6 +97,18 @@ class Weixin
         }
 
         return $body;
+    }
+
+    public function getAccessTokenWithCache()
+    {
+        $tokenInfo = \Service\Util::getGlobalVar('accessToken');
+        if ($tokenInfo === false || $tokenInfo['expired'] < time()) {
+            $tokenInfo = $this->getAccessToken();
+            $tokenInfo['expired'] = time() + $tokenInfo['expires_in'] - 100;
+            \Service\Util::setGlobalVar('accessToken', $tokenInfo);
+        }
+
+        return $tokenInfo['access_token'];
     }
 
     /**
