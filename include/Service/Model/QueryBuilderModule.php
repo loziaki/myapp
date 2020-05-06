@@ -57,6 +57,12 @@ trait QueryBuilderModule
         return $this;
     }
 
+    public function orWhere(...$args)
+    {
+        $this->query->orWhere(...$args);
+        return $this;
+    }
+
     public function limit(...$args)
     {
         $this->query->limit(...$args);

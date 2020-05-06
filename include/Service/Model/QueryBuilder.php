@@ -118,7 +118,7 @@ class QueryBuilder
     private function mergeWhereString($string)
     {
         if (!empty($this->where)) {
-            $this->where.= 'AND '.$string;
+            $this->where ='('.$this->where. ') AND ('.$string.')';
         } else {
             $this->where = $string;
         }

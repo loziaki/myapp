@@ -12,12 +12,17 @@ class DataModel
     const TABLE_FIELDS = [];
 
     protected $db;
-    private $kwargs;
+    private $kwargs = [];
+
+    public static function getDB()
+    {
+        return \Service\Util::getMySQLInstrance();
+    }
 
     public function __construct(array $param = [])
     {
-        $this->db = \Service\Util::getMySQLInstrance();
-
+        $this->db = static::getDB();
+        $this->kwargs = [];
         $this->setValues($param);
     }
 
@@ -50,10 +55,10 @@ class DataModel
         }
         $str1 = implode(', ', $arr);
 
-        $sql ='UPDATE '.static::TABLE_NAME.' SET '.$str1.' WHERE `'.$uk.'` = '.$ukValue;
+        $sql ='UPDATE '.static::TABLE_NAME.' SET '.$str1.' WHERE `'.$uk.'` = ?';
         $stat = $this->db->prepare($sql);
 
-        $stat->execute($param);
+        return $stat->execute([$ukValue]);
     }
 
     public function replace($uk, $ukValue)
@@ -87,12 +92,23 @@ class DataModel
 
     public function __get($key)
     {
-        return $this->kwargs[$key];
+        return ($this->kwargs[$key])?? null;
     }
 
     public function __set($key, $value)
     {
         $this->kwargs[$key] = $value;
+    }
+
+    public function __isset($key)
+    {
+        return array_key_exists($key, $this->kwargs);
+    }
+
+    public function __unset($key)
+    {
+        unset($this->kwargs[$key]);
+        return;
     }
 
     public function setValues(array $param)
