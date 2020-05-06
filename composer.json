@@ -2,7 +2,7 @@
   "name": "6773/myapp",
   "require": {
     "lcobucci/jwt": "*",
-    "symfony/http-foundation": "^3.3"
+    "symfony/http-foundation": "^5.0"
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.5"

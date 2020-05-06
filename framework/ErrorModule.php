@@ -4,12 +4,11 @@ namespace Framework;
 trait ErrorModule
 {
     private $errModuleMsg = [];
-
     /**
      * $code  int
      * $msg string
      */
-    protected function error($code, $msg)
+    protected function error($msg, $code = -1)
     {
         $this->errModuleMsg[] = [$code,$msg];
     }

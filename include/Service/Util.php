@@ -23,19 +23,33 @@ class Util
         }
     }
 
+    private static function globalVarPath($name)
+    {
+        return  TEMP_DIR.'var/'.$name;
+    }
+
     public static function getGlobalVar($name)
     {
-        try {
-            $db = self::getMySQLInstrance();
-            $db->beginTransaction();
-            $sql = 'SELECT val,expire_time FROM global_var WHERE name = ? FOR UPDATE';
-            $stat = $db->prepare($sql);
-            $stat->execute([$name]);
-            $db->commit();
-            return $stat->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw new Exception('QwQ MySQL CONNECTING ERROR: '. $e->getMessage());
+        $cPath = self::globalVarPath($name);
+        if (!file_exists($cPath)) {
+            return false;
         }
+        $content =  file_get_contents($cPath);
+        return unserialize($content);
+    }
+
+    public static function setGlobalVar($name, $value)
+    {
+        $content = \serialize($value);
+        $cPath = self::globalVarPath($name);
+
+        $dir = dirname($cPath);
+        if (!is_dir($dir)) {
+            mkdir($dir);
+        }
+
+        file_put_contents($cPath, $content);
+        return;
     }
 
     public static function getIp()
@@ -57,5 +71,17 @@ class Util
             $ip = reset(explode(',', $ip));
         }
         return $ip;
+    }
+
+    public static function getApiServerPath()
+    {
+        $url = '';
+        if (defined('API_DOMAIN') && defined('API_PATH')) {
+            $url = API_DOMAIN.API_PATH;
+            if (preg_match('/\/$/', $url)) {
+                $url = substr($url, 0, -1);
+            }
+        }
+        return $url;
     }
 }

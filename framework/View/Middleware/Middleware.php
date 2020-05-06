@@ -3,12 +3,11 @@ namespace Framework;
 
 class Middleware
 {
-    use \Framework\ErrorModule;
     /**
      *  $request \Symfony\Component\HttpFoundation\Request
      */
-    public function handle($request)
+    public function handle(&$appParams, $request)
     {
-        return true;
+        throw new  \Framework\Middleware\NotFineException('DO NOTHING');
     }
 }

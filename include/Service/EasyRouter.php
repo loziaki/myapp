@@ -19,6 +19,10 @@ class EasyRouter
 
         $viewName = '\\'.implode('\\', $pathArr);
 
+        if (!\class_exists($viewName)) {
+            return new \Framework\View();
+        }
+
         return new $viewName();
     }
 }

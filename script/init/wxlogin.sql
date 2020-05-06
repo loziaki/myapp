@@ -8,7 +8,7 @@ CREATE TABLE `wxuser` (
   `openId` varchar(255) DEFAULT NULL COMMENT '微信用户标识',
   `nickName` varchar(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '昵称',
   `avatarUrl` varchar(255) DEFAULT NULL COMMENT '头像',
-  `gender` tinyint(4) NOT NULL DEFAULT '0' COMMENT '性别',
+  `gender` tinyint(4) NOT NULL DEFAULT '0' COMMENT '性别,1-男，0-女',
   `language` varchar(20) DEFAULT NULL COMMENT '语言',
   `province` varchar(10) DEFAULT NULL COMMENT '省份',
   `city` varchar(10) DEFAULT NULL COMMENT '城市',
@@ -29,3 +29,10 @@ CREATE TABLE `token` (
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB COMMENT='登陆token';
 
+DROP TABLE IF EXISTS `auth`;
+CREATE TABLE `auth` (
+  `uid` int(11) NOT NULL COMMENT '用户id',
+  `permission` varchar(255) NOT NULL COMMENT '权限',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB COMMENT='权限表';

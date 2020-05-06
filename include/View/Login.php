@@ -3,9 +3,16 @@ namespace View;
 
 use Service\Weixin;
 use \Model\WxUser;
+use \Model\TokenInfo;
+use \Model\User;
+use \Model\Auth;
+
+use Symfony\Component\HttpFoundation\Cookie;
 
 class Login extends \Framework\BaseView
 {
+    const TOKEN_NAME = 'uutoken';
+
     public function validate($request)
     {
         $code  = $request->request->get('code');
@@ -31,32 +38,50 @@ class Login extends \Framework\BaseView
     {
         $wxsdk = new \Service\Wxsdk\Weixin(WEIXIN_APP_ID, WEIXIN_APP_SECRET);
         try {
-            // $wxres = $wxsdk->getAuthData($req['code']);
-            // $userInfo = $wxsdk->decryptData($req['encryptedData'], $req['iv'], $wxres['session_key']);
+            $wxres = $wxsdk->getAuthData($req['code']);
+            $wxUserInfo = $wxsdk->decryptData($req['encryptedData'], $req['iv'], $wxres['session_key']);
         } catch (\Service\Wxsdk\WxsdkException $e) {
             return $this->error($e->getMessage());
         }
         // \file_put_contents(TEMP_DIR.'userinfo', \serialize($userInfo));
-        $userInfo = \unserialize(\file_get_contents(TEMP_DIR.'userinfo'));
+        // $wxUserInfo = \unserialize(\file_get_contents(TEMP_DIR.'userinfo2'));
+        // $wxres = ['session_key' => 'test2'];
         //saveUser
-        $result = WxUser::select()->field('uid')->where('openId', $userInfo['openId'])->find();
+        $result = WxUser::select()->field('uid')->where('openId', $wxUserInfo['openId'])->find();
         if ($result == false) {
-            $uid = (new WxUser($userInfo))->save();
+            //先防止不能读取权限缓存导致创建了用户
+            $pArr = Auth::getDefaultPermissions();
+
+            $uid = (new WxUser($wxUserInfo))->save();
+            (new Auth([
+                'permission' => $pArr
+            ]))->save($uid);
         } else {
-            (new WxUser($userInfo))->update('uid', $result['uid']);
+            $uid = $result['uid'];
+            (new WxUser($wxUserInfo))->update('uid', $result['uid']);
+        }
+
+        $userInfo = User::select()->field(['uid','uidKey'])->where('uid', $uid)->find();
+        if ($userInfo == false) {
+            $userInfo = (new User([
+                'uid' => $uid,
+                'gender' => $wxUserInfo['gender'],
+                'role' => User::ROLE_GUEST
+            ]))->save();
         }
 
         $token  = $this->getToken();
 
         //saveToken
         (new \Model\TokenInfo([
-            'openId' => $userInfo['openId'],
-            // 'session_key' => $wxres['session_key'],
-            'session_key' => 'test',
+            'openId' => $wxUserInfo['openId'],
+            'session_key' => $wxres['session_key'],
+            // 'session_key' => 'test2',
             'token'=> $token,
-        ]))->save('uid', $result['uid']);
+        ]))->save('uid', $uid);
 
-        return $this->success(['token'=>$token]);
+        $res = $this->success(['token'=>$token, 'uid'=>intval($uid)]);
+        return $res;
     }
 
     private function getToken($len = 16)

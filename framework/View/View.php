@@ -13,7 +13,7 @@ class View
 
         if (\in_array($method, self::ALLOW_METHOD_NAMES)) {
             if (!method_exists($this, $method)) {
-                return $this->httpMethodNotAllowed();
+                return $this->httpForbidden();
             } else {
                 return $this->$method($request);
             }
@@ -22,8 +22,13 @@ class View
         }
     }
 
+    public function httpForbidden()
+    {
+        return  new HttpFoundation\Response('', HttpFoundation\Response::HTTP_FORBIDDEN);
+    }
+
     public function httpMethodNotAllowed()
     {
-        return  new HttpFoundation\Response(HttpFoundation\Response::HTTP_METHOD_NOT_ALLOWED);
+        return  new HttpFoundation\Response('', HttpFoundation\Response::HTTP_METHOD_NOT_ALLOWED);
     }
 }

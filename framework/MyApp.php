@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 namespace Framework;
 
 use \Symfony\Component\HttpFoundation\Response;
@@ -13,7 +13,6 @@ class MyApp
     const DEFAULT_HEADERS = [
         'content-type' => 'application/json',
         'charset' => 'utf-8',
-        // 'Access-Control-Allow-Origin' => '*'
     ];
 
     //数据库参数
@@ -38,16 +37,15 @@ class MyApp
             //使用 symfony/http-foundation
             // https://symfony.com/doc/current/components/http_foundation.html#installation
             $req = Request::createFromGlobals();
-
+            $var  = $req;
             //开始处理
             $res = $view->dispatch($req);
         } catch (\Exception $e) {
-            $res = $this->exception($e);
+            $res = self::exception($e);
         } catch (\Error $err) {
-            $res = $this->error($err);
+            $res = self::error($err);
         }
         if ($res instanceof Response) {
-            $res->headers->add(self::DEFAULT_HEADERS);
             $res->send();
         } else {
             header("Content-type: text/html; charset=utf-8");
@@ -58,39 +56,45 @@ class MyApp
     /**
      * $e \Exception
      */
-    public function exception($e)
+    public static function exception($e)
     {
         $eCode = $e->getCode();
         $eCode = (empty($eCode))? 'undefine' : $eCode;
+        $trace  = (defined('ENV') && ENV == 'dev')? $e->getTrace() : '';
 
         $resBody = [
             'code' => self::CODE_EXCEPTION,
             'msg' => '['.$eCode.']'.$e->getMessage(),
-            'trace' => $e->getTrace()
+            'trace' => $trace
         ];
-        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
-        $response = new Response($resJson, Response::HTTP_OK);
-        $response->send();
-
-        return $response;
+        return self::response($resBody);
     }
 
     /**
      *  $err Error
      */
-    public function error($e)
+    public static function error($e)
     {
         $eCode = $e->getCode();
         $eCode = (empty($eCode))? 'undefine' : $eCode;
+        $trace  = (defined('ENV') && ENV == 'dev')? $e->getTrace() : '';
 
         $resBody = [
             'code' => self::CODE_ERROR,
             'msg' => '['.$eCode.']'.$e->getMessage(),
-            'trace' => $e->getTrace()
+            'trace' => $trace
         ];
-        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
+        return self::response($resBody);
+    }
+
+    /**
+     *  $data expect array
+     */
+    public static function response($data)
+    {
+        $resJson = (is_array($data))? json_encode($data, JSON_UNESCAPED_UNICODE) : '';
         $response = new Response($resJson, Response::HTTP_OK);
-        $response->send();
+        $response ->headers->add(self::DEFAULT_HEADERS);
 
         return $response;
     }

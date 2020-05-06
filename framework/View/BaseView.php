@@ -5,11 +5,11 @@ use \Symfony\Component\HttpFoundation\Response;
 
 class BaseView extends View
 {
-    const ALLOW_METHOD_NAMES = ['get','post'];
+    const ALLOW_ORIGIN_NAME = '';
+
+    const ALLOW_HEADERS_NAMES = [];
 
     protected $midlewares = [];
-
-    protected $validater;
     /**
      *  $request \Symfony\Component\HttpFoundation\Request
      */
@@ -17,15 +17,14 @@ class BaseView extends View
     {
         try {
             $appParams = [];
-            if ($this->cook($appParams, $request)  === true) {
-                $customParams = $this->validateParam($request);
+            $this->cook($appParams, $request);
+            $customParams = $this->validateParam($request);
 
-                $res =  $this->handlePost($appParams, $customParams);
-            }
+            $res =  $this->handlePost($appParams, $customParams);
         } catch (\Framework\View\ParamException $e) {
-            $eCode = $e->getCode();
-            $eCode = (empty($eCode))? \Framework\MyApp::CODE_EXCEPTION : $eCode;
-            $res =  $this->error($e->getMessage(), $eCode);
+            $res =  $this->handleException($e);
+        } catch (\Framework\Middleware\NotFineException $e) {
+            $res =  $this->handleException($e);
         }
         return $res;
     }
@@ -37,36 +36,41 @@ class BaseView extends View
     {
         try {
             $appParams = [];
-            if ($this->cook($appParams, $request)  === true) {
-                $customParams = $this->validateParam($request);
+            $this->cook($appParams, $request);
+            $customParams = $this->validateParam($request);
 
-                $res =  $this->handleGet($appParams, $customParams);
-            }
-        } catch (\Framework\View\ParamException$e) {
-            $eCode = $e->getCode();
-            $eCode = (empty($eCode))? \Framework\MyApp::CODE_EXCEPTION : $eCode;
-            $res =  $this->error($e->getMessage(), $eCode);
+            $res =  $this->handleGet($appParams, $customParams);
+        } catch (\Framework\View\ParamException $e) {
+            $res =  $this->handleException($e);
+        } catch (\Framework\Middleware\NotFineException $e) {
+            $res =  $this->handleException($e);
         }
         return $res;
+    }
+
+    public function options($request)
+    {
+        $res = $this->reply();
+        $res->headers->set('Access-Control-Allow-Methods', implode(',', self::ALLOW_METHOD_NAMES));
+        $res->headers->set('Content-Length', 0);
+        $res->headers->set('Access-Control-Max-Age', 1800);
+
+        return  $res;
     }
 
     protected function cook(&$appParams, $request)
     {
         if (empty($this->middlewares)) {
             //不存在middlewares
-            return true;
+            return;
         }
 
         foreach ($this->middlewares as $m) {
-            $m = '\\Middleware\\'.$m;
-            if (!class_exists($m)) {
-                return false;
-            }
-            if (!(new $m())->handle($appParams, $request)) {
-                return false;
+            if ($m instanceof \Framework\Middleware) {
+                $m->handle($appParams, $request);
             }
         }
-        return true;
+        return ;
     }
 
 
@@ -75,7 +79,6 @@ class BaseView extends View
      */
     protected function validateParam($request)
     {
-
         //过滤多余的参数，获取正确的类型、格式
         $customParams = $this->validate($request);
 
@@ -84,6 +87,18 @@ class BaseView extends View
 
 
         return $customParams;
+    }
+
+    /**
+     * $e \Exception
+     */
+    protected function handleException($e)
+    {
+        $eCode = $e->getCode();
+        $eCode = (empty($eCode))? \Framework\MyApp::CODE_EXCEPTION : $eCode;
+        $res =  $this->error($e->getMessage(), $eCode);
+
+        return $res;
     }
 
     /**
@@ -97,8 +112,7 @@ class BaseView extends View
             'msg' => $msg,
         ];
 
-        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
-        $response = new Response($resJson, Response::HTTP_OK);
+        $response = $this->reply($resBody);
         return $response;
     }
 
@@ -106,15 +120,27 @@ class BaseView extends View
      * $msg string
      * $code int
      */
-    protected function success($data)
+    protected function success($data, $code = MyApp::CODE_SUCCESS)
     {
         $resBody = $data;
-        $resBody['code'] =  MyApp::CODE_SUCCESS;
+        $resBody['code'] =  $code;
         $resBody['msg'] = '';
 
-        $resJson = json_encode($resBody, JSON_UNESCAPED_UNICODE);
-        $response = new Response($resJson, Response::HTTP_OK);
+        $response = $this->reply($resBody);
         return $response;
+    }
+
+    protected function reply($data = '')
+    {
+        $res = MyApp::response($data);
+        if (!empty(static::ALLOW_ORIGIN_NAME)) {
+            $res->headers->set('Access-Control-Allow-Origin', static::ALLOW_ORIGIN_NAME);
+        }
+        if (!empty(static::ALLOW_HEADERS_NAMES)) {
+            $res->headers->set('Access-Control-Allow-Headers', implode(',', static::ALLOW_HEADERS_NAMES));
+        }
+
+        return $res;
     }
 
     /**

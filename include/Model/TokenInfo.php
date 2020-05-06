@@ -25,6 +25,13 @@ class TokenInfo extends DataModel
         $this->token_expire = time() + self::TOKEN_EXPIRE_IN;
         $this->last_login_ip = \Service\Util::getIp();
 
-        $this->replace($uk, $ukValue);
+        return $this->replace($uk, $ukValue);
+    }
+
+    public static function flushToken()
+    {
+        $db = self::getDB();
+        $sql = 'truncate table '.self::TABLE_NAME;
+        return $db->exec($sql);
     }
 }
