@@ -15,12 +15,17 @@ class MyApp
         'charset' => 'utf-8',
     ];
 
-    //数据库参数
-    public static $db;
+    //是否开启debug
+    private static $debug = false;
 
     public static function create()
     {
         return new static();
+    }
+
+    public static function debugMode($bool)
+    {
+        self::$debug = ($bool === true);
     }
 
     /**
@@ -29,11 +34,6 @@ class MyApp
     public function handle($view)
     {
         try {
-            //给view设置一个全局db
-            if (defined('DB_TYPE')) {
-                $view->db = \Service\Util::getMySQLInstrance();
-            }
-
             //使用 symfony/http-foundation
             // https://symfony.com/doc/current/components/http_foundation.html#installation
             $req = Request::createFromGlobals();
@@ -60,7 +60,7 @@ class MyApp
     {
         $eCode = $e->getCode();
         $eCode = (empty($eCode))? 'undefine' : $eCode;
-        $trace  = (defined('ENV') && ENV == 'dev')? $e->getTrace() : '';
+        $trace  = (self::$debug)? $e->getTrace() : '';
 
         $resBody = [
             'code' => self::CODE_EXCEPTION,
@@ -77,7 +77,7 @@ class MyApp
     {
         $eCode = $e->getCode();
         $eCode = (empty($eCode))? 'undefine' : $eCode;
-        $trace  = (defined('ENV') && ENV == 'dev')? $e->getTrace() : '';
+        $trace  = (self::$debug)? $e->getTrace() : '';
 
         $resBody = [
             'code' => self::CODE_ERROR,
