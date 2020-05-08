@@ -1,6 +1,10 @@
 <?php
 //初始化
 require 'init.php';
+
+//引用配置
+require ROOT_PATH.'config/config.php';
+
 //注册logger
 Service\Logger\LoggerFactory::set('file', new \Service\Logger\FileLogger());
 

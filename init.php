@@ -7,9 +7,6 @@ if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(__FILE__).DIRECTORY_SEPARATOR);
 }
 
-//引用配置
-require ROOT_PATH.'config/config.php';
-
 //引用MyAutoLoader
 require ROOT_PATH.'framework/MyAutoloader.php';
 Framework\MyAutoloader::register();
