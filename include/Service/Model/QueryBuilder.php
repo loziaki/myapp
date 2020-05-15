@@ -138,7 +138,7 @@ class QueryBuilder
                     if (is_null($item[1]) || $item[1] === QueryBuilder::PARAM_IS_NULL) {
                         $whereArr[] = '`'.$item[0].'` is null';
                     } elseif ($item[1] === QueryBuilder::PARAM_NOT_NULL) {
-                        $whereArr[] = '`'.$item[0].'` not null';
+                        $whereArr[] = '`'.$item[0].'`is not null';
                     } else {
                         $whereArr[] = '`'.$item[0].'` = ?';
                         $this->queryData[] = $item[1];
